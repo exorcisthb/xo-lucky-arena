@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đấu Trí X - O: Lãnh Đạo Cách Mạng Cả Nước (1965 - 1975)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇻🇳</text></svg>">
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="cyber-stage">
+    <!-- Top Header & Scoreboard -->
+    <header class="cyber-header">
+      <div class="header-branding">
+        <h1 class="glow-title">🇻🇳 ĐẤU TRÍ X - O: ĐƯỜNG ĐẾN ĐẠI THẮNG</h1>
+        <p class="subtitle">Lịch sử Đảng (1965 - 1975) • Vượt 20 Chặng Đua Tiếp Sức</p>
+      </div>
+
+      <!-- Integrated Scoreboard -->
+      <div class="stage-scoreboard">
+        <!-- Team X -->
+        <div class="team-capsule team-x active-turn" id="teamXCard">
+          <div class="capsule-symbol">X</div>
+          <div class="capsule-info">
+            <div class="capsule-name">ĐỘI X</div>
+            <div class="capsule-score" id="teamXScore">0</div>
+          </div>
+          <div class="capsule-actions">
+            <button class="turn-pick-btn" id="btnSelectTurnX">👉 LƯỢT X</button>
+            <div class="micro-btns">
+              <button data-team="X" data-score-adj="1">+1</button>
+              <button data-team="X" data-score-adj="-1">-1</button>
+              <button data-team="X" data-score-adj="x2">x2</button>
+              <button data-team="X" data-score-adj="/2">/2</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center VS & Draw Randomizer -->
+        <div class="vs-capsule">
+          <button class="btn-draw-cyber" id="btnOpenDrawModal" title="Bốc thăm lượt X / O">
+            <span class="dice-icon">🎲</span>
+            <span>BỐC THĂM X / O</span>
+          </button>
+          <div class="vs-text">VS</div>
+        </div>
+
+        <!-- Team O -->
+        <div class="team-capsule team-o" id="teamOCard">
+          <div class="capsule-symbol">O</div>
+          <div class="capsule-info">
+            <div class="capsule-name">ĐỘI O</div>
+            <div class="capsule-score" id="teamOScore">0</div>
+          </div>
+          <div class="capsule-actions">
+            <button class="turn-pick-btn" id="btnSelectTurnO">👉 LƯỢT O</button>
+            <div class="micro-btns">
+              <button data-team="O" data-score-adj="1">+1</button>
+              <button data-team="O" data-score-adj="-1">-1</button>
+              <button data-team="O" data-score-adj="x2">x2</button>
+              <button data-team="O" data-score-adj="/2">/2</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Utility Controls -->
+      <div class="header-utils">
+        <button class="util-btn" id="btnSoundToggle" title="Bật/Tắt âm thanh">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button class="util-btn" id="btnFullscreen" title="Toàn màn hình">
+          <span>⛶</span>
+        </button>
+        <button class="util-btn danger" id="btnResetGame" title="Chơi lại từ câu 1">
+          <span>🔄</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Playing Arena -->
+    <main class="arena-body">
+      <!-- LEFT: Vertical 1-20 Ladder ("1 dọc các câu từ 1 đến 20 cứ đẩy dần") -->
+      <aside class="ladder-sidebar">
+        <div class="ladder-header">
+          <span class="ladder-title">CHẶNG 1 — 20</span>
+          <button class="ladder-lucky-toggle" id="toggleLuckyVisibility" title="Bật/Ẩn dấu sao may mắn">
+            <span id="luckyEyeIcon">👁️</span>
+          </button>
+        </div>
+        <div class="ladder-scroll" id="ladderScrollContainer">
+          <!-- 20 ladder steps generated dynamically -->
+        </div>
+      </aside>
+
+      <!-- CENTER & RIGHT: The Futuristic Sci-Fi Question Terminal (Matching Reference Screenshot) -->
+      <section class="screen-terminal-container">
+        <!-- Big 3D Glowing Question Number in Top-Left (Matches Screenshot) -->
+        <div class="big-3d-number" id="stageBigNumber">
+          <span class="num-glow">1</span>
+        </div>
+
+        <!-- Cyber Top Info (Turn & Special Badge) -->
+        <div class="terminal-meta-row">
+          <div class="meta-turn-pill team-x" id="stageTurnPill">
+            <span class="pill-dot">●</span>
+            <span id="stageTurnText">ĐỘI X ĐANG TRẢ LỜI</span>
+          </div>
+
+          <div class="meta-lucky-badge" id="stageLuckyBadge" style="display: none;">
+            <span class="lucky-icon-flash" id="luckyIconDisplay">⭐</span>
+            <span class="lucky-title-flash" id="luckyTitleDisplay">NGÔI SAO VÀNG</span>
+          </div>
+        </div>
+
+        <!-- Sci-Fi Beveled Main Frame (Matches Screenshot) -->
+        <div class="cyber-frame">
+          <div class="frame-bevel-corner tl"></div>
+          <div class="frame-bevel-corner tr"></div>
+          <div class="frame-bevel-corner bl"></div>
+          <div class="frame-bevel-corner br"></div>
+
+          <!-- Title Bar inside Frame -->
+          <div class="frame-header">
+            <div class="frame-headline">
+              <span class="frame-headline-icon">⚡</span>
+              <h2>CHỌN ĐÁP ÁN</h2>
+            </div>
+            <div class="frame-progress" id="stageProgressTag">
+              CÂU 1 / 20
+            </div>
+          </div>
+
+          <!-- Question Content Box (Matches screenshot's dark blue rounded box) -->
+          <div class="question-screen-box">
+            <div class="question-main-text" id="stageQuestionText">
+              Đang tải nội dung câu hỏi...
+            </div>
+          </div>
+
+          <!-- Options Grid (4 Options: A, B, C, D) -->
+          <div class="options-arena" id="stageOptionsContainer">
+            <!-- Injected via JavaScript -->
+          </div>
+
+          <!-- Explanation Reveal Box -->
+          <div class="explanation-terminal" id="stageExplanationBox">
+            <div class="exp-header">
+              <span>💡</span> <strong>GIẢI THÍCH CHI TIẾT LỊCH SỬ:</strong>
+            </div>
+            <div class="exp-content" id="stageExplanationText"></div>
+          </div>
+
+          <!-- Host Score Assignment & Controls Bar -->
+          <div class="terminal-host-toolbar">
+            <div class="assign-group">
+              <span class="assign-label">Điểm câu này:</span>
+              <button class="assign-team-btn x active" id="btnAssignX">Đội X</button>
+              <button class="assign-team-btn o" id="btnAssignO">Đội O</button>
+              <button class="assign-team-btn none" id="btnAssignNone">Không ai</button>
+            </div>
+
+            <!-- Navigation Chevron Arrows (Matches screenshot's blue next arrow >) -->
+            <div class="nav-arrow-group">
+              <button class="cyber-nav-btn prev" id="btnPrevQuestion" title="Quay lại câu trước">
+                <span>◀</span>
+              </button>
+              <button class="cyber-nav-btn next" id="btnNextQuestion" title="Đẩy sang câu tiếp theo">
+                <span class="next-label">CÂU TIẾP</span>
+                <span class="next-chevron">▶</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bốc Thăm X / O Modal -->
+  <div class="modal-overlay" id="drawModal">
+    <div class="draw-modal-card">
+      <h2 style="font-size: 1.5rem; color: #f1f5f9;">🎲 BỐC THĂM QUYỀN TRẢ LỜI</h2>
+      <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 4px;">Quay ngẫu nhiên chọn Đội X hoặc Đội O</p>
+      
+      <div class="draw-coin" id="drawCoinDisplay">?</div>
+      
+      <div class="draw-result-text" id="drawResultText">Nhấn nút bên dưới để bốc thăm!</div>
+      
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="btn-draw-cyber big" id="btnSpinWheel">
+          🎯 Quay Thăm Ngay!
+        </button>
+        <button class="util-btn" id="btnCloseDrawModal" style="padding: 10px 18px;">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Special Action Selection Modal (Question 12: Cướp vs Swap) -->
+  <div class="modal-overlay" id="specialActionModal">
+    <div class="draw-modal-card" style="max-width: 520px;">
+      <div style="font-size: 3.2rem; margin-bottom: 8px;">⚔️</div>
+      <h2 style="font-size: 1.5rem; color: #38bdf8;">NGÔI SAO XANH: ĐẶC QUYỀN CÂU 12</h2>
+      <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 6px;" id="specialActionDesc">
+        Đội chiến thắng được quyền chọn 1 trong 2 đặc quyền:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin: 22px 0;">
+        <button class="special-choice-card" id="btnActionSteal">
+          <span class="choice-num">1</span>
+          <div class="choice-info">
+            <strong>CƯỚP 2 ĐIỂM TỪ ĐỐI PHƯƠNG</strong>
+            <small>Trừ 2 điểm của đối thủ và cộng trực tiếp vào đội mình</small>
+          </div>
+        </button>
+        <button class="special-choice-card swap" id="btnActionSwap">
+          <span class="choice-num">2</span>
+          <div class="choice-info">
+            <strong>HOÁN ĐỔI (SWAP) ĐIỂM SỐ 2 ĐỘI</strong>
+            <small>Đổi toàn bộ số điểm của Đội X và Đội O cho nhau</small>
+          </div>
+        </button>
+      </div>
+
+      <button class="util-btn" id="btnSkipSpecialAction" style="margin: 0 auto; width: auto; padding: 8px 18px;">
+        Chỉ nhận +1 điểm thông thường
+      </button>
+    </div>
+  </div>
+
+  <!-- Victory Finale Modal (At Question 20 completion) -->
+  <div class="modal-overlay" id="victoryModal">
+    <div class="draw-modal-card victory-card">
+      <div class="trophy-bounce">🏆</div>
+      <h2 class="victory-headline" id="victoryWinnerTitle">ĐỘI X TOÀN THẮNG!</h2>
+      <p style="color: #94a3b8; font-size: 1rem; margin-top: 4px;">
+        Đại thắng mùa xuân 1975 • Hoàn thành xuất sắc 20 câu hỏi!
+      </p>
+
+      <div class="victory-scores-row">
+        <div class="v-box team-x">
+          <div class="v-team">ĐỘI X</div>
+          <div class="v-score" id="victoryScoreX">0</div>
+          <div class="v-label">ĐIỂM</div>
+        </div>
+        <div class="v-versus">VS</div>
+        <div class="v-box team-o">
+          <div class="v-team">ĐỘI O</div>
+          <div class="v-score" id="victoryScoreO">0</div>
+          <div class="v-label">ĐIỂM</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; justify-content: center; margin-top: 10px;">
+        <button class="btn-draw-cyber" id="btnViewBoardAfterWin" style="background:#10b981;">
+          <span>👁️</span> Xem Lại Các Câu Hỏi
+        </button>
+        <button class="util-btn danger" id="btnRestartAfterWin" style="padding: 10px 20px;">
+          <span>🔄</span> Chơi Lại Từ Đầu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Alert -->
+  <div class="cyber-toast" id="cyberToast">
+    <span style="font-size: 1.2rem;">⚠️</span>
+    <span id="toastMessage">Thông báo</span>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
