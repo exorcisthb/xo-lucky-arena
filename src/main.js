@@ -17,7 +17,7 @@ let gameState = {
 // Load saved state from localStorage
 function loadSavedState() {
   try {
-    const saved = localStorage.getItem('ls_dang_quiz_state_1975');
+    const saved = localStorage.getItem('ls_dang_quiz_state_custom_rules_1975');
     if (saved) {
       const parsed = JSON.parse(saved);
       gameState = { ...gameState, ...parsed };
@@ -29,7 +29,7 @@ function loadSavedState() {
 
 function saveState() {
   try {
-    localStorage.setItem('ls_dang_quiz_state_1975', JSON.stringify(gameState));
+    localStorage.setItem('ls_dang_quiz_state_custom_rules_1975', JSON.stringify(gameState));
   } catch (e) {
     console.error('Cannot save state:', e);
   }
@@ -88,6 +88,47 @@ function setupEventListeners() {
   document.getElementById('btnNextQuestion').addEventListener('click', advanceToNextQuestion);
   document.getElementById('btnPrevQuestion').addEventListener('click', goToPrevQuestion);
 
+  // Milestone Book Modal (Câu 12: x2 hoặc Cướp điểm)
+  document.getElementById('btnBookDouble').addEventListener('click', () => {
+    gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
+    sound.playLucky();
+    triggerConfetti(90);
+    showToast("📖 BẢO BỐI: Bạn đã chọn NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+    closeModal('bookModal');
+    renderHeaderStats();
+    saveState();
+  });
+
+  document.getElementById('btnBookSteal').addEventListener('click', () => {
+    gameState.score += 3;
+    sound.playLucky();
+    triggerConfetti(90);
+    showToast("⚔️ BẢO BỐI: Bạn đã CƯỚP ĐƯỢC +3 ĐIỂM THƯỞNG!");
+    closeModal('bookModal');
+    renderHeaderStats();
+    saveState();
+  });
+
+  // Milestone Gamble Modal (Câu 17: x2 hoặc Lấy 50% số điểm)
+  document.getElementById('btnGambleDouble').addEventListener('click', () => {
+    gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
+    sound.playLucky();
+    triggerConfetti(90);
+    showToast("⚡ THỬ THÁCH: Bạn đã chọn NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+    closeModal('gambleModal');
+    renderHeaderStats();
+    saveState();
+  });
+
+  document.getElementById('btnGambleHalf').addEventListener('click', () => {
+    gameState.score = Math.ceil(gameState.score / 2);
+    sound.playDanger();
+    showToast("📉 THỬ THÁCH: Bạn đã lấy 50% SỐ ĐIỂM (CHIA ĐÔI)!");
+    closeModal('gambleModal');
+    renderHeaderStats();
+    saveState();
+  });
+
   // Victory modal buttons
   document.getElementById('btnViewBoardAfterWin').addEventListener('click', () => {
     closeModal('victoryModal');
@@ -117,19 +158,6 @@ function showToast(msg) {
    HEADER STATS
    ========================================================= */
 function renderHeaderStats() {
-  // Recalculate score and correct count
-  let correct = 0;
-  let pts = 0;
-  Object.keys(gameState.answeredQuestions).forEach(qid => {
-    const item = gameState.answeredQuestions[qid];
-    if (item.isCorrect) {
-      correct += 1;
-      pts += 1;
-    }
-  });
-  gameState.score = pts;
-  gameState.correctCount = correct;
-
   document.getElementById('headerScore').textContent = gameState.score;
   document.getElementById('headerCorrect').textContent = `${gameState.correctCount} / ${QUESTIONS_DATA.length}`;
 }
@@ -149,8 +177,7 @@ function renderLadder() {
     document.getElementById('luckyEyeIcon').textContent = '👁️';
   }
 
-  // Calculate highest unlocked index:
-  // Can access any question that has been reached or answered
+  // Calculate highest unlocked index
   let maxUnlockedIdx = 0;
   for (let i = 0; i < QUESTIONS_DATA.length; i++) {
     if (gameState.answeredQuestions[QUESTIONS_DATA[i].id]) {
@@ -257,7 +284,7 @@ function renderCurrentQuestion() {
     luckyBadge.style.display = 'inline-flex';
     luckyBadge.className = `meta-lucky-badge ${q.special.type}`;
     document.getElementById('luckyIconDisplay').textContent = q.special.icon;
-    document.getElementById('luckyTitleDisplay').textContent = `${q.special.name}`;
+    document.getElementById('luckyTitleDisplay').textContent = `${q.special.name}: ${q.special.desc}`;
   } else {
     luckyBadge.style.display = 'none';
   }
@@ -341,7 +368,7 @@ function renderCurrentQuestion() {
 }
 
 /* =========================================================
-   OPTION CLICK INTERACTION (EXACT GREEN/RED SPECIFICATION)
+   OPTION CLICK INTERACTION & SPECIAL RULES LOGIC
    ========================================================= */
 function handleOptionClick(selectedKey, q) {
   // Lock options
@@ -360,6 +387,9 @@ function handleOptionClick(selectedKey, q) {
 
     sound.playCorrect();
     triggerConfetti(70);
+
+    gameState.correctCount += 1;
+    gameState.score += 1; // +1 cơ bản
   } else {
     // WRONG: Red + Cross, Correct lights up Green + Checkmark
     chosenBtn.classList.add('state-wrong');
@@ -381,6 +411,40 @@ function handleOptionClick(selectedKey, q) {
     selectedKey: selectedKey,
     timestamp: Date.now()
   };
+
+  /* =========================================================
+     CÁC MỐC LUẬT ĐẶC BIỆT THEO YÊU CẦU:
+     - Xong câu 5: Mặc định được x2 điểm
+     - Xong câu 12: Mở book chọn 1 trong 2: x2 hoặc Cướp điểm
+     - Xong câu 17: Chọn x2 hoặc Lấy 50% số điểm
+     - Xong câu 20: Reset điểm về 0
+     ========================================================= */
+  if (q.id === 5) {
+    // Câu 5: Mặc định x2 điểm
+    gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
+    sound.playLucky();
+    triggerConfetti(90);
+    setTimeout(() => {
+      showToast("🌟 MỐC CÂU 5: Bạn mặc định được NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+    }, 400);
+  } else if (q.id === 12) {
+    // Câu 12: Mở book chọn x2 hoặc cướp điểm
+    setTimeout(() => {
+      openModal('bookModal');
+    }, 600);
+  } else if (q.id === 17) {
+    // Câu 17: Chọn x2 hoặc lấy 50% số điểm
+    setTimeout(() => {
+      openModal('gambleModal');
+    }, 600);
+  } else if (q.id === 20) {
+    // Câu 20: Reset điểm về 0
+    gameState.score = 0;
+    sound.playDanger();
+    setTimeout(() => {
+      showToast("🚨 CÂU 20: Toàn bộ điểm số đã bị RESET VỀ 0!");
+    }, 400);
+  }
 
   // Unlock Next button immediately with glowing pulse
   const nextBtn = document.getElementById('btnNextQuestion');
@@ -452,15 +516,10 @@ function goToPrevQuestion() {
    VICTORY FINALE
    ========================================================= */
 function showVictoryFinale() {
-  let correct = 0;
-  Object.keys(gameState.answeredQuestions).forEach(qid => {
-    if (gameState.answeredQuestions[qid].isCorrect) correct += 1;
-  });
-
   const total = QUESTIONS_DATA.length;
-  const percent = Math.round((correct / total) * 100);
+  const percent = Math.round((gameState.correctCount / total) * 100);
 
-  document.getElementById('victoryFinalScore').textContent = `${correct}`;
+  document.getElementById('victoryFinalScore').textContent = `${gameState.score}`;
   document.getElementById('victoryPercent').textContent = `${percent}%`;
 
   openModal('victoryModal');
@@ -481,6 +540,8 @@ function resetGame() {
   renderLadder();
   renderCurrentQuestion();
   closeModal('victoryModal');
+  closeModal('bookModal');
+  closeModal('gambleModal');
 }
 
 /* =========================================================

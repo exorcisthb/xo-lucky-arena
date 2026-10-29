@@ -67,8 +67,8 @@ export const QUESTIONS_DATA = [
     explanation: "Tháng 1/1967, Hội nghị lần thứ 13 Ban Chấp hành Trung ương Đảng (khóa III) đã quyết định mở mặt trận ngoại giao nhằm tranh thủ sự ủng hộ quốc tế, mở ra cục diện vừa đánh vừa đàm.",
     special: {
       type: "gold",
-      name: "NGÔI SAO VÀNG (X2 ĐIỂM)",
-      desc: "Đội trả lời đúng sẽ được NHÂN ĐÔI ĐIỂM SỐ (x2)!",
+      name: "MỐC CÂU 5: MẶC ĐỊNH X2 ĐIỂM",
+      desc: "Hoàn thành câu này bạn sẽ mặc định được NHÂN ĐÔI (x2) điểm số!",
       icon: "⭐"
     }
   },
@@ -122,12 +122,7 @@ export const QUESTIONS_DATA = [
     },
     correct: "B",
     explanation: "Trong Thư chúc mừng năm mới ngày 1-1-1969, Chủ tịch Hồ Chí Minh đã nêu rõ quyết tâm: 'Vì độc lập, vì tự do, đánh cho Mỹ cút, đánh cho ngụy nhào'.",
-    special: {
-      type: "gold",
-      name: "NGÔI SAO VÀNG (X2 ĐIỂM)",
-      desc: "Đội trả lời đúng sẽ được NHÂN ĐÔI ĐIỂM SỐ (x2)!",
-      icon: "⭐"
-    }
+    special: null
   },
   {
     id: 10,
@@ -168,9 +163,9 @@ export const QUESTIONS_DATA = [
     explanation: "Cuộc tiến công chiến lược năm 1972 nổi bật với cuộc chiến đấu vô cùng oanh liệt của Quân giải phóng tại Thành cổ Quảng Trị trong 81 ngày đêm.",
     special: {
       type: "blue",
-      name: "NGÔI SAO XANH: CƯỚP ĐIỂM / HOÁN ĐỔI (SWAP)",
-      desc: "Đặc quyền: Cướp 2 điểm từ đội bạn HOẶC Hoán đổi điểm số 2 đội!",
-      icon: "⚔️"
+      name: "MỐC CÂU 12: MỞ BOOK BÍ MẬT",
+      desc: "Xong câu này sẽ mở Book chọn: Nhân đôi (x2) HOẶC Cướp điểm thưởng!",
+      icon: "📖"
     }
   },
   {
@@ -238,9 +233,9 @@ export const QUESTIONS_DATA = [
     explanation: "Bộ Chính trị đề ra quyết tâm chiến lược giải phóng miền Nam trong 2 năm 1975 - 1976, đồng thời cài đặt phương hướng linh hoạt: nếu thời cơ đến sẽ giải phóng ngay trong năm 1975.",
     special: {
       type: "pink",
-      name: "NGÔI SAO HỒNG (CHIA ĐÔI ĐIỂM SỐ)",
-      desc: "Cảnh báo: Nếu sai hoặc định mệnh trúng, đội đang trả lời sẽ bị CHIA ĐÔI ĐIỂM SỐ (/2)!",
-      icon: "🌸"
+      name: "MỐC CÂU 17: CHỌN X2 HOẶC 50% ĐIỂM",
+      desc: "Xong câu này hãy lựa chọn: Nhân đôi (x2) HOẶC Lấy 50% số điểm!",
+      icon: "⚖️"
     }
   },
   {
@@ -282,10 +277,9 @@ export const QUESTIONS_DATA = [
     explanation: "Đại hội IV (12/1976) khẳng định: Thắng lợi kháng chiến chống Mỹ 'mãi mãi được ghi vào lịch sử dân tộc ta như một trong những trang chói lọi nhất, một biểu tượng sáng ngời về sự toàn thắng của chủ nghĩa anh hùng cách mạng và trí tuệ con người...'",
     special: {
       type: "red",
-      name: "NGÔI SAO ĐỎ (VỀ MO / MẤT HẾT ĐIỂM)",
-      desc: "CỰC KỲ NGUY HIỂM: Nếu trả lời sai, toàn bộ số điểm sẽ biến về 0 (Về Mo)!",
-      icon: "🔴"
+      name: "MỐC CÂU 20: RESET ĐIỂM VỀ 0",
+      desc: "Chặng cuối cùng: Toàn bộ điểm số sẽ bị RESET VỀ 0!",
+      icon: "🔄"
     }
   }
 ];
-
