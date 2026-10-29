@@ -89,6 +89,22 @@
               <span class="frame-headline-icon">⚡</span>
               <h2>CHỌN ĐÁP ÁN</h2>
             </div>
+
+            <!-- 10s Countdown Timer Widget -->
+            <div class="cyber-timer-widget" id="cyberTimerWidget" title="Bộ đếm thời gian: 10 giây">
+              <div class="timer-ring-box">
+                <svg class="timer-svg" viewBox="0 0 44 44">
+                  <circle class="timer-svg-track" cx="22" cy="22" r="18"></circle>
+                  <circle class="timer-svg-bar" id="timerSvgBar" cx="22" cy="22" r="18"></circle>
+                </svg>
+                <span class="timer-number-val" id="timerVal">10</span>
+              </div>
+              <div class="timer-text-label">
+                <span class="timer-title">THỜI GIAN</span>
+                <span class="timer-status" id="timerStatusLabel">10s</span>
+              </div>
+            </div>
+
             <div class="frame-progress" id="stageProgressTag">
               CÂU 1 / 20
             </div>
@@ -136,57 +152,45 @@
     </main>
   </div>
 
-  <!-- Modal Mở Book (Xong Câu 12) -->
+  <!-- Modal Mở Book (Xong Câu 12: 1 hàng 2 cột) -->
   <div class="modal-overlay" id="bookModal">
-    <div class="draw-modal-card" style="max-width: 500px;">
+    <div class="draw-modal-card" style="max-width: 580px;">
       <div style="font-size: 3.5rem; margin-bottom: 6px;">📖</div>
-      <h2 style="font-size: 1.45rem; color: #38bdf8;">MỞ BOOK BÍ MẬT: CÂU 12</h2>
+      <h2 style="font-size: 1.5rem; color: #38bdf8;">MỞ BOOK BÍ MẬT: CÂU 12</h2>
       <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 6px;">
-        Chúc mừng bạn đã hoàn thành Câu 12! Hãy chọn 1 trong 2 bảo bối:
+        Hãy chọn 1 trong 2 quyền năng:
       </p>
 
-      <div style="display: flex; flex-direction: column; gap: 14px; margin: 22px 0;">
-        <button class="special-choice-card" id="btnBookDouble">
-          <span class="choice-num" style="background:#eab308;">⭐</span>
-          <div class="choice-info">
-            <strong>NHÂN ĐÔI ĐIỂM SỐ (X2)</strong>
-            <small>Nhân đôi toàn bộ số điểm hiện có của bạn</small>
-          </div>
+      <div class="modal-choices-grid">
+        <button class="simple-choice-card x2" id="btnBookDouble">
+          <span class="choice-big-icon">⭐</span>
+          <span class="choice-big-text">X2 ĐIỂM NHÓM</span>
         </button>
-        <button class="special-choice-card" id="btnBookSteal" style="border-color: #0ea5e9;">
-          <span class="choice-num" style="background:#0284c7;">⚔️</span>
-          <div class="choice-info">
-            <strong>CƯỚP ĐIỂM THƯỞNG (+3 ĐIỂM)</strong>
-            <small>Cướp thêm 3 điểm thưởng trực tiếp vào tổng điểm</small>
-          </div>
+        <button class="simple-choice-card steal" id="btnBookSteal">
+          <span class="choice-big-icon">⚔️</span>
+          <span class="choice-big-text">CƯỚP ĐIỂM NHÓM</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Đánh Cược (Xong Câu 17) -->
+  <!-- Modal Đánh Cược (Xong Câu 17: 1 hàng 2 cột) -->
   <div class="modal-overlay" id="gambleModal">
-    <div class="draw-modal-card" style="max-width: 500px;">
+    <div class="draw-modal-card" style="max-width: 620px;">
       <div style="font-size: 3.5rem; margin-bottom: 6px;">⚖️</div>
-      <h2 style="font-size: 1.45rem; color: #f43f5e;">THỬ THÁCH ĐỊNH MỆNH: CÂU 17</h2>
+      <h2 style="font-size: 1.5rem; color: #f43f5e;">THỬ THÁCH ĐỊNH MỆNH: CÂU 17</h2>
       <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 6px;">
-        Đã vượt qua chặng 17! Hãy đưa ra lựa chọn quyết định:
+        Hãy chọn 1 trong 2 quyền năng:
       </p>
 
-      <div style="display: flex; flex-direction: column; gap: 14px; margin: 22px 0;">
-        <button class="special-choice-card" id="btnGambleDouble" style="border-color: #eab308;">
-          <span class="choice-num" style="background:#ca8a04;">⚡</span>
-          <div class="choice-info">
-            <strong>NHÂN ĐÔI ĐIỂM SỐ (X2)</strong>
-            <small>Nhân đôi toàn bộ số điểm hiện có</small>
-          </div>
+      <div class="modal-choices-grid">
+        <button class="simple-choice-card x2" id="btnGambleDouble">
+          <span class="choice-big-icon">⚡</span>
+          <span class="choice-big-text">X2 ĐIỂM NHÓM</span>
         </button>
-        <button class="special-choice-card" id="btnGambleHalf" style="border-color: #f43f5e;">
-          <span class="choice-num" style="background:#e11d48;">📉</span>
-          <div class="choice-info">
-            <strong>LẤY 50% SỐ ĐIỂM (CHIA ĐÔI /2)</strong>
-            <small>Chấp nhận giảm một nửa số điểm hiện tại</small>
-          </div>
+        <button class="simple-choice-card half" id="btnGambleHalf">
+          <span class="choice-big-icon">📉</span>
+          <span class="choice-big-text">LẤY 50% SỐ ĐIỂM NHÓM KHÁC</span>
         </button>
       </div>
     </div>

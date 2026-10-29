@@ -528,9 +528,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 14px;
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(0, 210, 255, 0.25);
+  flex-wrap: wrap;
 }
 
 .frame-headline {
@@ -551,6 +553,136 @@ body {
   color: var(--neon-cyan);
   text-shadow: 0 0 10px var(--neon-cyan-glow);
   text-transform: uppercase;
+}
+
+/* =========================================================
+   10-SECOND COUNTDOWN TIMER WIDGET (FUTURISTIC HUD POD)
+   ========================================================= */
+.cyber-timer-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #07152d 0%, #0b2246 100%);
+  border: 1.5px solid #00d2ff;
+  border-radius: 28px;
+  padding: 4px 14px 4px 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 210, 255, 0.25);
+  transition: all 0.3s ease;
+}
+
+.timer-ring-box {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-svg {
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+
+.timer-svg-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 3.5;
+}
+
+.timer-svg-bar {
+  fill: none;
+  stroke: #00d2ff;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 113.1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.95s linear, stroke 0.3s ease;
+}
+
+.timer-number-val {
+  position: absolute;
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-family: 'Courier New', Courier, monospace;
+  color: #00d2ff;
+  text-shadow: 0 0 8px rgba(0, 210, 255, 0.6);
+  transition: color 0.3s ease;
+}
+
+.timer-text-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.timer-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.timer-status {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #38bdf8;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Warning State (<= 3s) */
+.cyber-timer-widget.timer-warning {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.4), 0 0 15px rgba(245, 158, 11, 0.3);
+}
+.cyber-timer-widget.timer-warning .timer-svg-bar {
+  stroke: #f59e0b;
+}
+.cyber-timer-widget.timer-warning .timer-number-val,
+.cyber-timer-widget.timer-warning .timer-status {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+}
+
+/* Danger / Expired State (0s) */
+.cyber-timer-widget.timer-danger {
+  border-color: #ef4444;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5), 0 0 18px rgba(239, 68, 68, 0.4);
+  animation: timerPulse 0.5s infinite alternate;
+}
+.cyber-timer-widget.timer-danger .timer-svg-bar {
+  stroke: #ef4444;
+}
+.cyber-timer-widget.timer-danger .timer-number-val,
+.cyber-timer-widget.timer-danger .timer-status {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+/* Stopped / Completed State */
+.cyber-timer-widget.timer-stopped {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.cyber-timer-widget.timer-stopped .timer-svg-bar {
+  stroke: #10b981;
+}
+.cyber-timer-widget.timer-stopped .timer-number-val,
+.cyber-timer-widget.timer-stopped .timer-status {
+  color: #10b981;
+}
+
+@keyframes timerPulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  }
+  to {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+  }
 }
 
 .frame-progress {
@@ -998,7 +1130,7 @@ body {
   min-height: 38px;
 }
 
-/* Special choice card (Question 12) */
+/* Special choice card (Legacy) */
 .special-choice-card {
   background: #111e3b;
   border: 2px solid #0ea5e9;
@@ -1017,6 +1149,99 @@ body {
   background: #182c57;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+}
+
+/* 1 row 2 columns grid for milestone modals (Câu 12, Câu 17) */
+.modal-choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 26px 0 10px 0;
+  width: 100%;
+}
+
+.simple-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px 18px;
+  border-radius: 18px;
+  background: #101c38;
+  border: 2px solid #0ea5e9;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.simple-choice-card:hover {
+  transform: translateY(-5px) scale(1.02);
+}
+
+.simple-choice-card.x2 {
+  border-color: #eab308;
+  background: linear-gradient(145deg, #182444 0%, #281d05 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(234, 179, 8, 0.15);
+}
+.simple-choice-card.x2:hover {
+  box-shadow: 0 12px 32px rgba(234, 179, 8, 0.45), inset 0 0 20px rgba(234, 179, 8, 0.3);
+  border-color: #fde047;
+}
+.simple-choice-card.x2 .choice-big-text {
+  color: #fef08a;
+  text-shadow: 0 0 12px rgba(253, 224, 71, 0.5);
+}
+
+.simple-choice-card.steal {
+  border-color: #0284c7;
+  background: linear-gradient(145deg, #182444 0%, #062b4c 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(2, 132, 199, 0.15);
+}
+.simple-choice-card.steal:hover {
+  box-shadow: 0 12px 32px rgba(14, 165, 233, 0.45), inset 0 0 20px rgba(14, 165, 233, 0.3);
+  border-color: #38bdf8;
+}
+.simple-choice-card.steal .choice-big-text {
+  color: #bae6fd;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.simple-choice-card.half {
+  border-color: #e11d48;
+  background: linear-gradient(145deg, #182444 0%, #3d0918 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(225, 29, 72, 0.15);
+}
+.simple-choice-card.half:hover {
+  box-shadow: 0 12px 32px rgba(225, 29, 72, 0.45), inset 0 0 20px rgba(225, 29, 72, 0.3);
+  border-color: #fb7185;
+}
+.simple-choice-card.half .choice-big-text {
+  color: #fecdd3;
+  text-shadow: 0 0 12px rgba(251, 113, 133, 0.5);
+}
+
+.choice-big-icon {
+  font-size: 3.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25));
+  transition: transform 0.2s ease;
+}
+
+.simple-choice-card:hover .choice-big-icon {
+  transform: scale(1.12);
+}
+
+.choice-big-text {
+  font-size: 1.18rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-align: center;
+  line-height: 1.35;
+  text-transform: uppercase;
 }
 
 .special-choice-card.swap {

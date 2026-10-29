@@ -88,12 +88,12 @@ function setupEventListeners() {
   document.getElementById('btnNextQuestion').addEventListener('click', advanceToNextQuestion);
   document.getElementById('btnPrevQuestion').addEventListener('click', goToPrevQuestion);
 
-  // Milestone Book Modal (Câu 12: x2 hoặc Cướp điểm)
+  // Milestone Book Modal (Câu 12: 1 hàng 2 cột: X2 điểm nhóm / Cướp điểm nhóm)
   document.getElementById('btnBookDouble').addEventListener('click', () => {
     gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
     sound.playLucky();
     triggerConfetti(90);
-    showToast("📖 BẢO BỐI: Bạn đã chọn NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+    showToast("⭐ BẢO BỐI: Bạn đã chọn X2 ĐIỂM NHÓM!");
     closeModal('bookModal');
     renderHeaderStats();
     saveState();
@@ -103,27 +103,29 @@ function setupEventListeners() {
     gameState.score += 3;
     sound.playLucky();
     triggerConfetti(90);
-    showToast("⚔️ BẢO BỐI: Bạn đã CƯỚP ĐƯỢC +3 ĐIỂM THƯỞNG!");
+    showToast("⚔️ BẢO BỐI: Bạn đã chọn CƯỚP ĐIỂM NHÓM (+3 điểm)!");
     closeModal('bookModal');
     renderHeaderStats();
     saveState();
   });
 
-  // Milestone Gamble Modal (Câu 17: x2 hoặc Lấy 50% số điểm)
+  // Milestone Gamble Modal (Câu 17: 1 hàng 2 cột: X2 điểm nhóm / Lấy 50% số điểm nhóm khác)
   document.getElementById('btnGambleDouble').addEventListener('click', () => {
     gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
     sound.playLucky();
     triggerConfetti(90);
-    showToast("⚡ THỬ THÁCH: Bạn đã chọn NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+    showToast("⚡ THỬ THÁCH: Bạn đã chọn X2 ĐIỂM NHÓM!");
     closeModal('gambleModal');
     renderHeaderStats();
     saveState();
   });
 
   document.getElementById('btnGambleHalf').addEventListener('click', () => {
-    gameState.score = Math.ceil(gameState.score / 2);
-    sound.playDanger();
-    showToast("📉 THỬ THÁCH: Bạn đã lấy 50% SỐ ĐIỂM (CHIA ĐÔI)!");
+    const stolen = Math.max(3, Math.ceil(gameState.score * 0.5));
+    gameState.score += stolen;
+    sound.playLucky();
+    triggerConfetti(90);
+    showToast(`📈 THỬ THÁCH: Bạn đã LẤY 50% SỐ ĐIỂM NHÓM KHÁC (+${stolen} điểm)!`);
     closeModal('gambleModal');
     renderHeaderStats();
     saveState();
@@ -265,6 +267,103 @@ function renderLadder() {
 }
 
 /* =========================================================
+   10-SECOND COUNTDOWN TIMER ("bộ điểm giờ 10s")
+   ========================================================= */
+const TIMER_TOTAL_SECONDS = 10;
+const CIRCUMFERENCE = 113.1; // 2 * Math.PI * 18
+let timerInterval = null;
+let timerSecondsLeft = TIMER_TOTAL_SECONDS;
+
+function startQuestionTimer() {
+  stopQuestionTimer();
+
+  const currentQ = QUESTIONS_DATA[gameState.currentIndex];
+  if (!currentQ) return;
+
+  // If this question is already answered, show done state
+  if (gameState.answeredQuestions[currentQ.id]) {
+    setTimerDisplay(0, false, true);
+    return;
+  }
+
+  timerSecondsLeft = TIMER_TOTAL_SECONDS;
+  updateTimerUI(timerSecondsLeft);
+
+  timerInterval = setInterval(() => {
+    timerSecondsLeft -= 1;
+
+    // Ticking audio in last 3 seconds
+    if (timerSecondsLeft <= 3 && timerSecondsLeft > 0) {
+      sound.playTimerTick();
+    }
+
+    if (timerSecondsLeft <= 0) {
+      timerSecondsLeft = 0;
+      stopQuestionTimer();
+      sound.playTimeUp();
+      setTimerDisplay(0, true, false);
+      showToast('⏱️ HẾT GIỜ 10 GIÂY! Vui lòng chọn đáp án!');
+      return;
+    }
+
+    updateTimerUI(timerSecondsLeft);
+  }, 1000);
+}
+
+function stopQuestionTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateTimerUI(seconds) {
+  const widget = document.getElementById('cyberTimerWidget');
+  const bar = document.getElementById('timerSvgBar');
+  const val = document.getElementById('timerVal');
+  const label = document.getElementById('timerStatusLabel');
+  if (!widget || !bar || !val || !label) return;
+
+  val.textContent = seconds;
+  label.textContent = `${seconds}s`;
+
+  const offset = CIRCUMFERENCE * (1 - seconds / TIMER_TOTAL_SECONDS);
+  bar.style.strokeDashoffset = offset;
+
+  widget.classList.remove('timer-warning', 'timer-danger', 'timer-stopped');
+
+  if (seconds <= 3) {
+    widget.classList.add('timer-warning');
+  }
+}
+
+function setTimerDisplay(seconds, isExpired, isAlreadyAnswered) {
+  const widget = document.getElementById('cyberTimerWidget');
+  const bar = document.getElementById('timerSvgBar');
+  const val = document.getElementById('timerVal');
+  const label = document.getElementById('timerStatusLabel');
+  if (!widget || !bar || !val || !label) return;
+
+  widget.classList.remove('timer-warning', 'timer-danger', 'timer-stopped');
+
+  if (isAlreadyAnswered) {
+    val.textContent = '✓';
+    label.textContent = 'ĐÃ XONG';
+    bar.style.strokeDashoffset = 0;
+    widget.classList.add('timer-stopped');
+  } else if (isExpired) {
+    val.textContent = '0';
+    label.textContent = 'HẾT GIỜ';
+    bar.style.strokeDashoffset = CIRCUMFERENCE;
+    widget.classList.add('timer-danger');
+  } else {
+    val.textContent = seconds;
+    label.textContent = `${seconds}s`;
+    widget.classList.add('timer-stopped');
+  }
+}
+
+/* =========================================================
    STAGE QUESTION DISPLAY (MATCHING REFERENCE SCREENSHOT)
    ========================================================= */
 function renderCurrentQuestion() {
@@ -297,6 +396,14 @@ function renderCurrentQuestion() {
   optionsContainer.innerHTML = '';
 
   const answeredData = gameState.answeredQuestions[q.id];
+
+  // 10s Countdown Timer check:
+  if (answeredData) {
+    stopQuestionTimer();
+    setTimerDisplay(0, false, true);
+  } else {
+    startQuestionTimer();
+  }
 
   const keys = ['A', 'B', 'C', 'D'];
   keys.forEach(key => {
@@ -371,6 +478,10 @@ function renderCurrentQuestion() {
    OPTION CLICK INTERACTION & SPECIAL RULES LOGIC
    ========================================================= */
 function handleOptionClick(selectedKey, q) {
+  // Stop countdown immediately
+  stopQuestionTimer();
+  setTimerDisplay(timerSecondsLeft, false, false);
+
   // Lock options
   const allBtns = document.querySelectorAll('.option-card-btn');
   allBtns.forEach(b => b.classList.add('locked'));
@@ -528,6 +639,7 @@ function showVictoryFinale() {
 }
 
 function resetGame() {
+  stopQuestionTimer();
   gameState = {
     currentIndex: 0,
     score: 0,
