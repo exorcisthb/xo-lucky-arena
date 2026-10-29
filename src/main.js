@@ -199,11 +199,13 @@ function renderLadder() {
       step.classList.add('locked');
     }
 
-    // Answered status stamp: Green check (✓) or Red cross (✗)
+    // Answered status stamp: Green check (✓), Red cross (✗), or Timeout (⏱️)
     if (isAnswered) {
       const ans = gameState.answeredQuestions[q.id];
       if (ans.isCorrect) {
         step.classList.add('win-correct');
+      } else if (ans.timeOut) {
+        step.classList.add('win-timeout');
       } else {
         step.classList.add('win-wrong');
       }
@@ -292,15 +294,78 @@ function startQuestionTimer() {
 
     if (timerSecondsLeft <= 0) {
       timerSecondsLeft = 0;
-      stopQuestionTimer();
-      sound.playTimeUp();
-      setTimerDisplay(0, true, false);
-      showToast('⏱️ HẾT GIỜ 10 GIÂY! Vui lòng chọn đáp án!');
+      handleQuestionTimeout(currentQ);
       return;
     }
 
     updateTimerUI(timerSecondsLeft);
   }, 1000);
+}
+
+/* =========================================================
+   TIMEOUT HANDLER: HẾT 10S BÁO CHƯA TRẢ LỜI & HIỆN ĐÁP ÁN ĐÚNG
+   ========================================================= */
+function handleQuestionTimeout(q) {
+  stopQuestionTimer();
+  sound.playTimeUp();
+  setTimerDisplay(0, true, false);
+
+  // Lock all options so player cannot click anymore
+  const allBtns = document.querySelectorAll('.option-card-btn');
+  allBtns.forEach(btn => btn.classList.add('locked'));
+
+  // Only highlight the correct answer in Green
+  const correctBtn = document.getElementById(`optCard_${q.correct}`);
+  if (correctBtn) {
+    correctBtn.classList.add('state-correct');
+    const correctBadge = document.getElementById(`optBadge_${q.correct}`);
+    if (correctBadge) correctBadge.innerHTML = '✓ ĐÁP ÁN ĐÚNG';
+  }
+
+  // Record unanswered / timeout record
+  gameState.answeredQuestions[q.id] = {
+    isCorrect: false,
+    selectedKey: null,
+    timeOut: true,
+    timestamp: Date.now()
+  };
+
+  // Special milestone check for Câu 20 (Reset điểm về 0)
+  if (q.id === 20) {
+    gameState.score = 0;
+    sound.playDanger();
+    setTimeout(() => {
+      showToast("🚨 CÂU 20: RESET ĐIỂM NHÓM VỀ 0 (VỀ MO)!");
+    }, 400);
+  }
+
+  // Unlock Next button to advance
+  const nextBtn = document.getElementById('btnNextQuestion');
+  if (nextBtn) {
+    nextBtn.classList.remove('locked');
+    nextBtn.classList.add('ready-pulse');
+    nextBtn.title = "Đã hết giờ! Bấm để chuyển sang câu tiếp theo ▶";
+  }
+
+  // Status text indicator
+  const statusText = document.getElementById('questionStatusText');
+  if (statusText) {
+    statusText.textContent = "⏰ Hết 10s: Chưa có câu trả lời!";
+    statusText.style.color = "var(--neon-gold)";
+  }
+
+  // Reveal explanation
+  setTimeout(() => {
+    const expBox = document.getElementById('stageExplanationBox');
+    if (expBox) expBox.classList.add('show');
+  }, 350);
+
+  // Update left ladder progression
+  renderLadder();
+  saveState();
+
+  // Toast notification
+  showToast("⏰ HẾT 10 GIÂY: CHƯA CÓ CÂU TRẢ LỜI!");
 }
 
 function stopQuestionTimer() {
@@ -340,10 +405,17 @@ function setTimerDisplay(seconds, isExpired, isAlreadyAnswered) {
   widget.classList.remove('timer-warning', 'timer-danger', 'timer-stopped');
 
   if (isAlreadyAnswered) {
-    val.textContent = '✓';
-    label.textContent = 'ĐÃ XONG';
-    bar.style.strokeDashoffset = 0;
-    widget.classList.add('timer-stopped');
+    if (isExpired) {
+      val.textContent = '0';
+      label.textContent = 'HẾT GIỜ';
+      bar.style.strokeDashoffset = CIRCUMFERENCE;
+      widget.classList.add('timer-danger');
+    } else {
+      val.textContent = '✓';
+      label.textContent = 'ĐÃ XONG';
+      bar.style.strokeDashoffset = 0;
+      widget.classList.add('timer-stopped');
+    }
   } else if (isExpired) {
     val.textContent = '0';
     label.textContent = 'HẾT GIỜ';
@@ -393,7 +465,7 @@ function renderCurrentQuestion() {
   // 10s Countdown Timer check:
   if (answeredData) {
     stopQuestionTimer();
-    setTimerDisplay(0, false, true);
+    setTimerDisplay(0, !!answeredData.timeOut, true);
   } else {
     startQuestionTimer();
   }
@@ -456,8 +528,13 @@ function renderCurrentQuestion() {
     nextBtn.classList.remove('locked');
     nextBtn.classList.add('ready-pulse');
     nextBtn.title = "Đã xong câu này! Bấm để chuyển sang câu tiếp theo ▶";
-    statusText.textContent = answeredData.isCorrect ? "✅ Câu trả lời chính xác!" : "❌ Chưa chính xác, xem giải thích bên dưới.";
-    statusText.style.color = answeredData.isCorrect ? "var(--neon-green)" : "var(--neon-red)";
+    if (answeredData.timeOut) {
+      statusText.textContent = "⏰ Hết 10s: Chưa có câu trả lời!";
+      statusText.style.color = "var(--neon-gold)";
+    } else {
+      statusText.textContent = answeredData.isCorrect ? "✅ Câu trả lời chính xác!" : "❌ Chưa chính xác, xem giải thích bên dưới.";
+      statusText.style.color = answeredData.isCorrect ? "var(--neon-green)" : "var(--neon-red)";
+    }
   } else {
     nextBtn.classList.add('locked');
     nextBtn.classList.remove('ready-pulse');

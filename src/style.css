@@ -348,6 +348,18 @@ body {
   color: var(--neon-red);
 }
 
+.ladder-step.win-timeout {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: #291b05;
+}
+.ladder-step.win-timeout .ladder-step-num {
+  color: var(--neon-gold);
+}
+.ladder-step.win-timeout::after {
+  content: '⏱️';
+  font-size: 0.95rem;
+}
+
 .question-nav-status {
   font-size: 0.9rem;
   font-weight: 700;
