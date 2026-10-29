@@ -26,12 +26,14 @@
 }
 
 body {
-  background-color: var(--cyber-bg);
+  background-color: #0b1120;
   background-image: 
-    radial-gradient(ellipse at 50% 25%, #162c54 0%, var(--cyber-bg) 75%),
-    linear-gradient(rgba(0, 210, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 210, 255, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 36px 36px, 36px 36px;
+    linear-gradient(rgba(6, 12, 24, 0.35), rgba(6, 12, 24, 0.65)),
+    url('./assets/bg-vietnam.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-stack);
   min-height: 100vh;

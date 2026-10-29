@@ -262,9 +262,9 @@ function renderLadder() {
 }
 
 /* =========================================================
-   10-SECOND COUNTDOWN TIMER ("bộ điểm giờ 10s")
+   20-SECOND COUNTDOWN TIMER ("bộ đếm giờ 20s")
    ========================================================= */
-const TIMER_TOTAL_SECONDS = 10;
+const TIMER_TOTAL_SECONDS = 20;
 const CIRCUMFERENCE = 113.1; // 2 * Math.PI * 18
 let timerInterval = null;
 let timerSecondsLeft = TIMER_TOTAL_SECONDS;
@@ -350,7 +350,7 @@ function handleQuestionTimeout(q) {
   // Status text indicator
   const statusText = document.getElementById('questionStatusText');
   if (statusText) {
-    statusText.textContent = "⏰ Hết 10s: Chưa có câu trả lời!";
+    statusText.textContent = "⏰ Hết 20s: Chưa có câu trả lời!";
     statusText.style.color = "var(--neon-gold)";
   }
 
@@ -365,7 +365,7 @@ function handleQuestionTimeout(q) {
   saveState();
 
   // Toast notification
-  showToast("⏰ HẾT 10 GIÂY: CHƯA CÓ CÂU TRẢ LỜI!");
+  showToast("⏰ HẾT 20 GIÂY: CHƯA CÓ CÂU TRẢ LỜI!");
 }
 
 function stopQuestionTimer() {
@@ -529,7 +529,7 @@ function renderCurrentQuestion() {
     nextBtn.classList.add('ready-pulse');
     nextBtn.title = "Đã xong câu này! Bấm để chuyển sang câu tiếp theo ▶";
     if (answeredData.timeOut) {
-      statusText.textContent = "⏰ Hết 10s: Chưa có câu trả lời!";
+      statusText.textContent = "⏰ Hết 20s: Chưa có câu trả lời!";
       statusText.style.color = "var(--neon-gold)";
     } else {
       statusText.textContent = answeredData.isCorrect ? "✅ Câu trả lời chính xác!" : "❌ Chưa chính xác, xem giải thích bên dưới.";
