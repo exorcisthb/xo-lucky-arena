@@ -4,22 +4,20 @@ import { sound } from './sound.js';
 import { triggerConfetti } from './confetti.js';
 
 /* =========================================================
-   GAME STATE (LINEAR SEQUENTIAL PROGRESSION 1 -> 20)
+   GAME STATE (SINGLE PLAYER / CLASS QUIZ)
    ========================================================= */
 let gameState = {
   currentIndex: 0, // 0 to 19 (Câu 1 đến Câu 20)
-  scoreX: 0,
-  scoreO: 0,
-  currentTurn: 'X', // 'X' or 'O'
-  assignTeam: 'X',  // 'X', 'O', or 'NONE'
-  answeredQuestions: {}, // { [qId]: { team: 'X'|'O'|'NONE', isCorrect: bool, selectedKey: 'A'|'B'|'C'|'D' } }
+  score: 0,
+  correctCount: 0,
+  answeredQuestions: {}, // { [qId]: { isCorrect: bool, selectedKey: 'A'|'B'|'C'|'D' } }
   showLuckyMarkers: false
 };
 
 // Load saved state from localStorage
 function loadSavedState() {
   try {
-    const saved = localStorage.getItem('xo_game_state_linear_1975');
+    const saved = localStorage.getItem('ls_dang_quiz_state_1975');
     if (saved) {
       const parsed = JSON.parse(saved);
       gameState = { ...gameState, ...parsed };
@@ -31,7 +29,7 @@ function loadSavedState() {
 
 function saveState() {
   try {
-    localStorage.setItem('xo_game_state_linear_1975', JSON.stringify(gameState));
+    localStorage.setItem('ls_dang_quiz_state_1975', JSON.stringify(gameState));
   } catch (e) {
     console.error('Cannot save state:', e);
   }
@@ -42,8 +40,8 @@ function saveState() {
    ========================================================= */
 window.addEventListener('DOMContentLoaded', () => {
   loadSavedState();
+  renderHeaderStats();
   renderLadder();
-  renderScoreboard();
   renderCurrentQuestion();
   setupEventListeners();
 });
@@ -67,7 +65,7 @@ function setupEventListeners() {
 
   // Reset Game
   document.getElementById('btnResetGame').addEventListener('click', () => {
-    if (confirm('Bạn có chắc chắn muốn đặt lại trò chơi về Câu 1 (xóa điểm và kết quả)?')) {
+    if (confirm('Bạn có chắc chắn muốn đặt lại toàn bộ bài thi về Câu 1?')) {
       resetGame();
     }
   });
@@ -86,57 +84,9 @@ function setupEventListeners() {
     saveState();
   });
 
-  // Turn selection buttons
-  document.getElementById('btnSelectTurnX').addEventListener('click', () => setTurn('X'));
-  document.getElementById('btnSelectTurnO').addEventListener('click', () => setTurn('O'));
-
-  // Micro score adjustment buttons (+1, -1, x2, /2)
-  document.querySelectorAll('[data-score-adj]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const team = e.currentTarget.getAttribute('data-team');
-      const val = e.currentTarget.getAttribute('data-score-adj');
-      adjustScore(team, val);
-    });
-  });
-
   // Navigation: Next (">") and Previous ("<")
   document.getElementById('btnNextQuestion').addEventListener('click', advanceToNextQuestion);
   document.getElementById('btnPrevQuestion').addEventListener('click', goToPrevQuestion);
-
-  // Score assignment buttons for the current question
-  document.getElementById('btnAssignX').addEventListener('click', () => setAssignTeam('X'));
-  document.getElementById('btnAssignO').addEventListener('click', () => setAssignTeam('O'));
-  document.getElementById('btnAssignNone').addEventListener('click', () => setAssignTeam('NONE'));
-
-  // Draw Modal (Bốc thăm X/O)
-  document.getElementById('btnOpenDrawModal').addEventListener('click', () => {
-    openModal('drawModal');
-    document.getElementById('drawCoinDisplay').textContent = '?';
-    document.getElementById('drawCoinDisplay').style.color = 'var(--neon-gold)';
-    document.getElementById('drawResultText').textContent = 'Nhấn nút bên dưới để bốc thăm!';
-  });
-  document.getElementById('btnCloseDrawModal').addEventListener('click', () => {
-    closeModal('drawModal');
-  });
-  document.getElementById('btnSpinWheel').addEventListener('click', spinCoin);
-
-  // Question 12 Special Action Modal
-  document.getElementById('btnActionSteal').addEventListener('click', () => {
-    applyStealAction();
-    closeModal('specialActionModal');
-  });
-  document.getElementById('btnActionSwap').addEventListener('click', () => {
-    applySwapAction();
-    closeModal('specialActionModal');
-  });
-  document.getElementById('btnSkipSpecialAction').addEventListener('click', () => {
-    const team = gameState.assignTeam;
-    if (team === 'X') gameState.scoreX += 1;
-    else if (team === 'O') gameState.scoreO += 1;
-    renderScoreboard();
-    saveState();
-    closeModal('specialActionModal');
-  });
 
   // Victory modal buttons
   document.getElementById('btnViewBoardAfterWin').addEventListener('click', () => {
@@ -145,77 +95,6 @@ function setupEventListeners() {
   document.getElementById('btnRestartAfterWin').addEventListener('click', () => {
     resetGame();
   });
-}
-
-/* =========================================================
-   SCOREBOARD RENDERING
-   ========================================================= */
-function renderScoreboard() {
-  document.getElementById('teamXScore').textContent = gameState.scoreX;
-  document.getElementById('teamOScore').textContent = gameState.scoreO;
-
-  const cardX = document.getElementById('teamXCard');
-  const cardO = document.getElementById('teamOCard');
-
-  if (gameState.currentTurn === 'X') {
-    cardX.classList.add('active-turn');
-    cardO.classList.remove('active-turn');
-  } else {
-    cardO.classList.add('active-turn');
-    cardX.classList.remove('active-turn');
-  }
-
-  // Update Turn pill above the stage screen
-  const pill = document.getElementById('stageTurnPill');
-  const turnText = document.getElementById('stageTurnText');
-  pill.className = `meta-turn-pill ${gameState.currentTurn === 'X' ? 'team-x' : 'team-o'}`;
-  turnText.textContent = `LƯỢT ĐỘI ${gameState.currentTurn} TRẢ LỜI`;
-}
-
-function setTurn(team) {
-  gameState.currentTurn = team;
-  gameState.assignTeam = team;
-  sound.playClick();
-  renderScoreboard();
-  updateAssignButtons();
-  saveState();
-}
-
-function adjustScore(team, delta) {
-  sound.playClick();
-  if (delta === 'x2') {
-    if (team === 'X') gameState.scoreX = Math.max(0, gameState.scoreX * 2);
-    else gameState.scoreO = Math.max(0, gameState.scoreO * 2);
-  } else if (delta === '/2') {
-    if (team === 'X') gameState.scoreX = Math.ceil(gameState.scoreX / 2);
-    else gameState.scoreO = Math.ceil(gameState.scoreO / 2);
-  } else {
-    const num = parseInt(delta, 10);
-    if (team === 'X') gameState.scoreX = Math.max(0, gameState.scoreX + num);
-    else gameState.scoreO = Math.max(0, gameState.scoreO + num);
-  }
-  renderScoreboard();
-  saveState();
-}
-
-function setAssignTeam(team) {
-  sound.playClick();
-  gameState.assignTeam = team;
-  updateAssignButtons();
-
-  // If already answered, update record
-  const currentQ = QUESTIONS_DATA[gameState.currentIndex];
-  if (gameState.answeredQuestions[currentQ.id]) {
-    gameState.answeredQuestions[currentQ.id].team = team;
-    renderLadder();
-  }
-  saveState();
-}
-
-function updateAssignButtons() {
-  document.getElementById('btnAssignX').classList.toggle('active', gameState.assignTeam === 'X');
-  document.getElementById('btnAssignO').classList.toggle('active', gameState.assignTeam === 'O');
-  document.getElementById('btnAssignNone').classList.toggle('active', gameState.assignTeam === 'NONE');
 }
 
 /* =========================================================
@@ -235,6 +114,27 @@ function showToast(msg) {
 }
 
 /* =========================================================
+   HEADER STATS
+   ========================================================= */
+function renderHeaderStats() {
+  // Recalculate score and correct count
+  let correct = 0;
+  let pts = 0;
+  Object.keys(gameState.answeredQuestions).forEach(qid => {
+    const item = gameState.answeredQuestions[qid];
+    if (item.isCorrect) {
+      correct += 1;
+      pts += 1;
+    }
+  });
+  gameState.score = pts;
+  gameState.correctCount = correct;
+
+  document.getElementById('headerScore').textContent = gameState.score;
+  document.getElementById('headerCorrect').textContent = `${gameState.correctCount} / ${QUESTIONS_DATA.length}`;
+}
+
+/* =========================================================
    VERTICAL 1-20 LADDER ("1 DỌC CÁC CÂU TỪ 1 ĐẾN 20 CỨ ĐẨY DẦN")
    ========================================================= */
 function renderLadder() {
@@ -249,11 +149,8 @@ function renderLadder() {
     document.getElementById('luckyEyeIcon').textContent = '👁️';
   }
 
-  // Calculate highest unlocked index
-  // A question is accessible if:
-  // 1. It is already answered
-  // 2. It is the active question
-  // 3. Or it's the next question after the latest answered question
+  // Calculate highest unlocked index:
+  // Can access any question that has been reached or answered
   let maxUnlockedIdx = 0;
   for (let i = 0; i < QUESTIONS_DATA.length; i++) {
     if (gameState.answeredQuestions[QUESTIONS_DATA[i].id]) {
@@ -280,12 +177,14 @@ function renderLadder() {
       step.classList.add('locked');
     }
 
-    // Answered stamp
+    // Answered status stamp: Green check (✓) or Red cross (✗)
     if (isAnswered) {
       const ans = gameState.answeredQuestions[q.id];
-      if (ans.team === 'X') step.classList.add('win-x');
-      else if (ans.team === 'O') step.classList.add('win-o');
-      else step.classList.add('no-win');
+      if (ans.isCorrect) {
+        step.classList.add('win-correct');
+      } else {
+        step.classList.add('win-wrong');
+      }
     }
 
     let luckyBadge = '';
@@ -320,7 +219,6 @@ function renderLadder() {
         return;
       }
 
-      // Can navigate to previously answered questions or current question
       gameState.currentIndex = idx;
       renderCurrentQuestion();
       renderLadder();
@@ -353,13 +251,13 @@ function renderCurrentQuestion() {
   // 2. Progress tag (e.g. CÂU 1 / 20)
   document.getElementById('stageProgressTag').textContent = `CÂU ${q.id} / 20`;
 
-  // 3. Lucky Event Flash Badge
+  // 3. Special Event Flash Badge (if milestone question)
   const luckyBadge = document.getElementById('stageLuckyBadge');
   if (q.special) {
     luckyBadge.style.display = 'inline-flex';
     luckyBadge.className = `meta-lucky-badge ${q.special.type}`;
     document.getElementById('luckyIconDisplay').textContent = q.special.icon;
-    document.getElementById('luckyTitleDisplay').textContent = `${q.special.name}: ${q.special.desc}`;
+    document.getElementById('luckyTitleDisplay').textContent = `${q.special.name}`;
   } else {
     luckyBadge.style.display = 'none';
   }
@@ -415,32 +313,30 @@ function renderCurrentQuestion() {
     expBox.classList.remove('show');
   }
 
-  // 7. Update Host Assignment team defaults to currentTurn
-  if (!answeredData) {
-    gameState.assignTeam = gameState.currentTurn;
-  } else {
-    gameState.assignTeam = answeredData.team;
-  }
-  updateAssignButtons();
-
-  // Next Button Label & Lock State
+  // 7. Navigation Status & Next Button Lock State
   const nextBtn = document.getElementById('btnNextQuestion');
   const nextLabel = nextBtn.querySelector('.next-label');
+  const statusText = document.getElementById('questionStatusText');
+
   if (gameState.currentIndex === QUESTIONS_DATA.length - 1) {
-    nextLabel.textContent = 'KẾT THÚC';
+    nextLabel.textContent = 'XEM KẾT QUẢ';
   } else {
     nextLabel.textContent = 'CÂU TIẾP';
   }
 
-  const isAnswered = !!gameState.answeredQuestions[q.id];
+  const isAnswered = !!answeredData;
   if (isAnswered) {
     nextBtn.classList.remove('locked');
     nextBtn.classList.add('ready-pulse');
     nextBtn.title = "Đã xong câu này! Bấm để chuyển sang câu tiếp theo ▶";
+    statusText.textContent = answeredData.isCorrect ? "✅ Câu trả lời chính xác!" : "❌ Chưa chính xác, xem giải thích bên dưới.";
+    statusText.style.color = answeredData.isCorrect ? "var(--neon-green)" : "var(--neon-red)";
   } else {
     nextBtn.classList.add('locked');
     nextBtn.classList.remove('ready-pulse');
     nextBtn.title = `Bắt buộc phải trả lời xong Câu ${q.id} mới được sang câu tiếp theo!`;
+    statusText.textContent = "Chọn 1 đáp án để tiếp tục";
+    statusText.style.color = "var(--text-muted)";
   }
 }
 
@@ -464,8 +360,6 @@ function handleOptionClick(selectedKey, q) {
 
     sound.playCorrect();
     triggerConfetti(70);
-
-    applyAnswerScore(true, q);
   } else {
     // WRONG: Red + Cross, Correct lights up Green + Checkmark
     chosenBtn.classList.add('state-wrong');
@@ -479,12 +373,10 @@ function handleOptionClick(selectedKey, q) {
     }
 
     sound.playWrong();
-    applyAnswerScore(false, q);
   }
 
   // Save answered record
   gameState.answeredQuestions[q.id] = {
-    team: gameState.assignTeam,
     isCorrect: isCorrect,
     selectedKey: selectedKey,
     timestamp: Date.now()
@@ -496,64 +388,17 @@ function handleOptionClick(selectedKey, q) {
   nextBtn.classList.add('ready-pulse');
   nextBtn.title = "Đã xong câu này! Bấm để chuyển sang câu tiếp theo ▶";
 
+  const statusText = document.getElementById('questionStatusText');
+  statusText.textContent = isCorrect ? "✅ Câu trả lời chính xác!" : "❌ Chưa chính xác, xem giải thích bên dưới.";
+  statusText.style.color = isCorrect ? "var(--neon-green)" : "var(--neon-red)";
+
   // Reveal explanation
   setTimeout(() => {
     document.getElementById('stageExplanationBox').classList.add('show');
   }, 350);
 
+  renderHeaderStats();
   renderLadder();
-  saveState();
-}
-
-function applyAnswerScore(isCorrect, q) {
-  const team = gameState.assignTeam;
-
-  if (isCorrect) {
-    if (q.special) {
-      if (q.special.type === 'gold') {
-        // Câu 5 & 9: Ngôi sao Vàng (x2 Điểm)
-        sound.playLucky();
-        if (team === 'X') {
-          gameState.scoreX = (gameState.scoreX > 0) ? gameState.scoreX * 2 : 2;
-        } else if (team === 'O') {
-          gameState.scoreO = (gameState.scoreO > 0) ? gameState.scoreO * 2 : 2;
-        }
-      } else if (q.id === 12) {
-        // Câu 12: Ngôi sao Xanh (Cướp / Swap)
-        setTimeout(() => {
-          const desc = document.getElementById('specialActionDesc');
-          if (desc) {
-            desc.innerHTML = `Chúc mừng <strong style="color: ${team === 'X' ? 'var(--neon-cyan)' : 'var(--neon-pink)'}">ĐỘI ${team}</strong> đã trả lời đúng câu 12! Hãy chọn 1 đặc quyền:`;
-          }
-          openModal('specialActionModal');
-        }, 600);
-        return;
-      } else {
-        // +1 for normal correct
-        if (team === 'X') gameState.scoreX += 1;
-        else if (team === 'O') gameState.scoreO += 1;
-      }
-    } else {
-      // Normal Question: +1 point
-      if (team === 'X') gameState.scoreX += 1;
-      else if (team === 'O') gameState.scoreO += 1;
-    }
-  } else {
-    // WRONG PENALTIES FOR SPECIAL LUCKY QUESTIONS:
-    if (q.id === 20) {
-      // Câu 20: Ngôi sao Đỏ - VỀ MO (MẤT HẾT ĐIỂM)
-      sound.playDanger();
-      if (team === 'X') gameState.scoreX = 0;
-      else if (team === 'O') gameState.scoreO = 0;
-    } else if (q.id === 17) {
-      // Câu 17: Ngôi sao Hồng - CHIA ĐÔI ĐIỂM (/2)
-      sound.playDanger();
-      if (team === 'X') gameState.scoreX = Math.ceil(gameState.scoreX / 2);
-      else if (team === 'O') gameState.scoreO = Math.ceil(gameState.scoreO / 2);
-    }
-  }
-
-  renderScoreboard();
   saveState();
 }
 
@@ -585,15 +430,9 @@ function advanceToNextQuestion() {
     return;
   }
 
-  // Alternate default turn for next question
-  if (gameState.currentTurn === 'X') gameState.currentTurn = 'O';
-  else gameState.currentTurn = 'X';
-  gameState.assignTeam = gameState.currentTurn;
-
   // Advance index
   gameState.currentIndex += 1;
 
-  renderScoreboard();
   renderLadder();
   renderCurrentQuestion();
   saveState();
@@ -610,108 +449,35 @@ function goToPrevQuestion() {
 }
 
 /* =========================================================
-   QUESTION 12 SPECIAL ACTIONS (CƯỚP / SWAP)
-   ========================================================= */
-function applyStealAction() {
-  const team = gameState.assignTeam;
-  sound.playLucky();
-  if (team === 'X') {
-    const stealAmount = Math.min(2, gameState.scoreO);
-    gameState.scoreO = Math.max(0, gameState.scoreO - stealAmount);
-    gameState.scoreX += (stealAmount > 0 ? stealAmount : 2);
-  } else if (team === 'O') {
-    const stealAmount = Math.min(2, gameState.scoreX);
-    gameState.scoreX = Math.max(0, gameState.scoreX - stealAmount);
-    gameState.scoreO += (stealAmount > 0 ? stealAmount : 2);
-  }
-  renderScoreboard();
-  saveState();
-}
-
-function applySwapAction() {
-  sound.playLucky();
-  const temp = gameState.scoreX;
-  gameState.scoreX = gameState.scoreO;
-  gameState.scoreO = temp;
-  renderScoreboard();
-  saveState();
-}
-
-/* =========================================================
-   BỐC THĂM X / O RANDOMIZER (WHEEL / COIN FLIP)
-   ========================================================= */
-function spinCoin() {
-  const btn = document.getElementById('btnSpinWheel');
-  const coin = document.getElementById('drawCoinDisplay');
-  const text = document.getElementById('drawResultText');
-
-  btn.disabled = true;
-  coin.classList.add('spinning');
-  sound.playCoinSpin();
-
-  let counter = 0;
-  const interval = setInterval(() => {
-    coin.textContent = (counter % 2 === 0) ? 'X' : 'O';
-    coin.style.color = (counter % 2 === 0) ? 'var(--neon-cyan)' : 'var(--neon-pink)';
-    sound.playClick();
-    counter++;
-  }, 100);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    coin.classList.remove('spinning');
-    btn.disabled = false;
-
-    const outcome = Math.random() < 0.5 ? 'X' : 'O';
-    coin.textContent = outcome;
-    coin.style.color = outcome === 'X' ? 'var(--neon-cyan)' : 'var(--neon-pink)';
-
-    text.innerHTML = `🎉 KẾT QUẢ: <strong style="color: ${outcome === 'X' ? 'var(--neon-cyan)' : 'var(--neon-pink)'}">ĐỘI ${outcome}</strong> ĐƯỢC QUYỀN TRẢ LỜI!`;
-    sound.playCorrect();
-
-    setTurn(outcome);
-  }, 1800);
-}
-
-/* =========================================================
    VICTORY FINALE
    ========================================================= */
 function showVictoryFinale() {
-  const title = document.getElementById('victoryWinnerTitle');
-  const scoreX = document.getElementById('victoryScoreX');
-  const scoreO = document.getElementById('victoryScoreO');
+  let correct = 0;
+  Object.keys(gameState.answeredQuestions).forEach(qid => {
+    if (gameState.answeredQuestions[qid].isCorrect) correct += 1;
+  });
 
-  scoreX.textContent = gameState.scoreX;
-  scoreO.textContent = gameState.scoreO;
+  const total = QUESTIONS_DATA.length;
+  const percent = Math.round((correct / total) * 100);
 
-  if (gameState.scoreX > gameState.scoreO) {
-    title.textContent = '🏆 ĐỘI X TOÀN THẮNG!';
-    title.style.color = 'var(--neon-cyan)';
-  } else if (gameState.scoreO > gameState.scoreX) {
-    title.textContent = '🏆 ĐỘI O TOÀN THẮNG!';
-    title.style.color = 'var(--neon-pink)';
-  } else {
-    title.textContent = '🤝 HAI ĐỘI HÒA NHAU!';
-    title.style.color = 'var(--neon-gold)';
-  }
+  document.getElementById('victoryFinalScore').textContent = `${correct}`;
+  document.getElementById('victoryPercent').textContent = `${percent}%`;
 
   openModal('victoryModal');
   triggerConfetti(150);
-  sound.playLucky();
+  sound.playCorrect();
 }
 
 function resetGame() {
   gameState = {
     currentIndex: 0,
-    scoreX: 0,
-    scoreO: 0,
-    currentTurn: 'X',
-    assignTeam: 'X',
+    score: 0,
+    correctCount: 0,
     answeredQuestions: {},
     showLuckyMarkers: false
   };
   saveState();
-  renderScoreboard();
+  renderHeaderStats();
   renderLadder();
   renderCurrentQuestion();
   closeModal('victoryModal');
