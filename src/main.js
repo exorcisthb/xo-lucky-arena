@@ -90,44 +90,35 @@ function setupEventListeners() {
 
   // Milestone Book Modal (Câu 12: 1 hàng 2 cột: X2 điểm nhóm / Cướp điểm nhóm)
   document.getElementById('btnBookDouble').addEventListener('click', () => {
-    gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
     sound.playLucky();
     triggerConfetti(90);
     showToast("⭐ BẢO BỐI: Bạn đã chọn X2 ĐIỂM NHÓM!");
     closeModal('bookModal');
-    renderHeaderStats();
     saveState();
   });
 
   document.getElementById('btnBookSteal').addEventListener('click', () => {
-    gameState.score += 3;
     sound.playLucky();
     triggerConfetti(90);
-    showToast("⚔️ BẢO BỐI: Bạn đã chọn CƯỚP ĐIỂM NHÓM (+3 điểm)!");
+    showToast("⚔️ BẢO BỐI: Bạn đã chọn CƯỚP ĐIỂM NHÓM!");
     closeModal('bookModal');
-    renderHeaderStats();
     saveState();
   });
 
   // Milestone Gamble Modal (Câu 17: 1 hàng 2 cột: X2 điểm nhóm / Lấy 50% số điểm nhóm khác)
   document.getElementById('btnGambleDouble').addEventListener('click', () => {
-    gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
     sound.playLucky();
     triggerConfetti(90);
     showToast("⚡ THỬ THÁCH: Bạn đã chọn X2 ĐIỂM NHÓM!");
     closeModal('gambleModal');
-    renderHeaderStats();
     saveState();
   });
 
   document.getElementById('btnGambleHalf').addEventListener('click', () => {
-    const stolen = Math.max(3, Math.ceil(gameState.score * 0.5));
-    gameState.score += stolen;
     sound.playLucky();
     triggerConfetti(90);
-    showToast(`📈 THỬ THÁCH: Bạn đã LẤY 50% SỐ ĐIỂM NHÓM KHÁC (+${stolen} điểm)!`);
+    showToast("📉 THỬ THÁCH: Bạn đã chọn LẤY 50% SỐ ĐIỂM NHÓM KHÁC!");
     closeModal('gambleModal');
-    renderHeaderStats();
     saveState();
   });
 
@@ -157,11 +148,13 @@ function showToast(msg) {
 }
 
 /* =========================================================
-   HEADER STATS
+   HEADER STATS (OPTIONAL GUARDS)
    ========================================================= */
 function renderHeaderStats() {
-  document.getElementById('headerScore').textContent = gameState.score;
-  document.getElementById('headerCorrect').textContent = `${gameState.correctCount} / ${QUESTIONS_DATA.length}`;
+  const elScore = document.getElementById('headerScore');
+  const elCorrect = document.getElementById('headerCorrect');
+  if (elScore) elScore.textContent = gameState.score;
+  if (elCorrect) elCorrect.textContent = `${gameState.correctCount} / ${QUESTIONS_DATA.length}`;
 }
 
 /* =========================================================
@@ -531,12 +524,12 @@ function handleOptionClick(selectedKey, q) {
      - Xong câu 20: Reset điểm về 0
      ========================================================= */
   if (q.id === 5) {
-    // Câu 5: Mặc định x2 điểm
+    // Câu 5: Mặc định x2 điểm nhóm
     gameState.score = (gameState.score > 0) ? gameState.score * 2 : 2;
     sound.playLucky();
     triggerConfetti(90);
     setTimeout(() => {
-      showToast("🌟 MỐC CÂU 5: Bạn mặc định được NHÂN ĐÔI (X2) ĐIỂM SỐ!");
+      showToast("🌟 MỐC CÂU 5: Mặc định được X2 ĐIỂM NHÓM!");
     }, 400);
   } else if (q.id === 12) {
     // Câu 12: Mở book chọn x2 hoặc cướp điểm
@@ -544,16 +537,16 @@ function handleOptionClick(selectedKey, q) {
       openModal('bookModal');
     }, 600);
   } else if (q.id === 17) {
-    // Câu 17: Chọn x2 hoặc lấy 50% số điểm
+    // Câu 17: Chọn x2 hoặc lấy 50% số điểm nhóm khác
     setTimeout(() => {
       openModal('gambleModal');
     }, 600);
   } else if (q.id === 20) {
-    // Câu 20: Reset điểm về 0
+    // Câu 20: Reset điểm nhóm về 0
     gameState.score = 0;
     sound.playDanger();
     setTimeout(() => {
-      showToast("🚨 CÂU 20: Toàn bộ điểm số đã bị RESET VỀ 0!");
+      showToast("🚨 CÂU 20: RESET ĐIỂM NHÓM VỀ 0 (VỀ MO)!");
     }, 400);
   }
 
@@ -627,11 +620,14 @@ function goToPrevQuestion() {
    VICTORY FINALE
    ========================================================= */
 function showVictoryFinale() {
-  const total = QUESTIONS_DATA.length;
-  const percent = Math.round((gameState.correctCount / total) * 100);
-
-  document.getElementById('victoryFinalScore').textContent = `${gameState.score}`;
-  document.getElementById('victoryPercent').textContent = `${percent}%`;
+  const elFinalScore = document.getElementById('victoryFinalScore');
+  const elPercent = document.getElementById('victoryPercent');
+  if (elFinalScore) elFinalScore.textContent = `${gameState.score}`;
+  if (elPercent) {
+    const total = QUESTIONS_DATA.length;
+    const percent = Math.round((gameState.correctCount / total) * 100);
+    elPercent.textContent = `${percent}%`;
+  }
 
   openModal('victoryModal');
   triggerConfetti(150);
